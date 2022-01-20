@@ -1,8 +1,10 @@
 {
   "name": "remix-middleware",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "middleware for your remix loaders",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": "https://github.com/neurosnap/remix-middleware.git",
   "author": "Eric Bower",
   "license": "MIT",
   "private": false,
