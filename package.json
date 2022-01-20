@@ -18,6 +18,9 @@
     "*.{ts}": "prettier --write"
   },
   "scripts": {
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test": "tsc --noEmit",
+    "build": "tsc",
+    "prepublish": "yarn build"
   }
 }
