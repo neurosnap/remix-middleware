@@ -1,0 +1,9 @@
+prettier.config.js
+tsconfig.json
+yarn.lock
+yarn-error.log
+.husky/
+flake.nix
+flake.lock
+*.test.ts
+*.test.js
