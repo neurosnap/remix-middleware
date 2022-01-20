@@ -17,38 +17,47 @@ mdw.use(mdw.routes());
 
 ```tsx
 // ./app/routes/posts/index.tsx
-import { useLoaderData } from "remix";
+import { Form, useLoaderData } from "remix";
 
 import { mdw } from "~/middleware";
+
+interface Post {
+  id: string;
+  title: string;
+}
 
 export const loader = mdw.loader((ctx) => {
   // ctx.response is where the response object goes
   ctx.response = [
     {
+      id: "1",
       title: "My First Post",
     },
     {
+      id: "2",
       title: "A Mixtape I Made Just For You",
     },
   ];
 });
 
-export const action = mdw.action(async ({ request }) => {
-  const body = await request.formData();
-  const post = await createPost(body);
-  ctx.response = redirect(`/posts/${post.id}`);
+export const action = mdw.action(async (ctx) => {
+  const body = await ctx.request.formData();
+  const post = { id: "3", title: body.get("title") };
+  ctx.response = post;
 });
 
 export default function Posts() {
-  const posts = useLoaderData();
+  const posts = useLoaderData<Post[]>();
   return (
     <div>
       <h1>Posts</h1>
       <div>
-        {posts.map((post) => <div key={post.slug}>{post.title}</div>)}
+        {posts.map((post) => (
+          <div key={post.id}>{post.title}</div>
+        ))}
       </div>
       <div>
-        <form method="post" action="/posts">
+        <Form method="post">
           <p>
             <label>
               Title: <input name="title" type="text" />
@@ -57,7 +66,7 @@ export default function Posts() {
           <p>
             <button type="submit">Create</button>
           </p>
-        </form>
+        </Form>
       </div>
     </div>
   );
