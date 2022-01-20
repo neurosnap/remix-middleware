@@ -51,20 +51,18 @@ export function createMiddleware() {
   const middleware: Middleware[] = [];
   const middlewareMap: { [key: string]: Middleware[] } = {};
 
-  function route(md: MiddlewareCo) {
-    return async function middlewareFn(props: DataFunctionArgs) {
-      const name = compileName(props.request);
-      if (Array.isArray(md)) {
-        middlewareMap[name] = md;
-      } else {
-        middlewareMap[name] = [md];
-      }
+  async function middlewareFn(props: DataFunctionArgs, md: MiddlewareCo) {
+    const name = compileName(props.request);
+    if (Array.isArray(md)) {
+      middlewareMap[name] = md;
+    } else {
+      middlewareMap[name] = [md];
+    }
 
-      const ctx: Ctx = { ...props, response: {} };
-      const fn = compose(middleware);
-      await fn(ctx);
-      return ctx.response;
-    };
+    const ctx: Ctx = { ...props, response: {} };
+    const fn = compose(middleware);
+    await fn(ctx);
+    return ctx.response;
   }
 
   return {
@@ -86,7 +84,9 @@ export function createMiddleware() {
       const md = compose(match);
       await md(ctx, next);
     },
-    loader: (md: MiddlewareCo = defaultMiddleware): LoaderFunction => route(md),
-    action: (md: MiddlewareCo = defaultMiddleware): ActionFunction => route(md),
+    run: (
+      props: DataFunctionArgs,
+      md: MiddlewareCo = defaultMiddleware,
+    ): Promise<Response> | Promise<AppData> => middlewareFn(props, md),
   };
 }

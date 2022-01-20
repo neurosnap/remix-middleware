@@ -21,7 +21,7 @@ mdw.use(mdw.routes());
 
 ```tsx
 // ./app/routes/posts/index.tsx
-import { Form, useLoaderData } from "remix";
+import { ActionFunction, LoaderFunction, Form, useLoaderData } from "remix";
 
 import { mdw } from "~/middleware";
 
@@ -30,25 +30,27 @@ interface Post {
   title: string;
 }
 
-export const loader = mdw.loader((ctx) => {
-  // ctx.response is where the response object goes
-  ctx.response = [
-    {
-      id: "1",
-      title: "My First Post",
-    },
-    {
-      id: "2",
-      title: "A Mixtape I Made Just For You",
-    },
-  ];
-});
+export const loader: LoaderFunction = (props) =>
+  mdw.run(props, (ctx) => {
+    // ctx.response is where the response object goes
+    ctx.response = [
+      {
+        id: "1",
+        title: "My First Post",
+      },
+      {
+        id: "2",
+        title: "A Mixtape I Made Just For You",
+      },
+    ];
+  });
 
-export const action = mdw.action(async (ctx) => {
-  const body = await ctx.request.formData();
-  const post = { id: "3", title: body.get("title") };
-  ctx.response = post;
-});
+export const action: ActionFunction = (props) =>
+  mdw.run(props, async (ctx) => {
+    const body = await ctx.request.formData();
+    const post = { id: "3", title: body.get("title") };
+    ctx.response = post;
+  });
 
 export default function Posts() {
   const posts = useLoaderData<Post[]>();
@@ -81,16 +83,18 @@ Just have simple JSON that you are returning in a loader like in the example
 above?
 
 ```tsx
-export const loader = mdw.loader(
-  mdw.response([
-    {
-      id: "1",
-      title: "My First Post",
-    },
-    {
-      id: "2",
-      title: "A Mixtape I Made Just For You",
-    },
-  ]),
-);
+export const loader: LoaderFunction = (props) =>
+  mdw.run(
+    props,
+    mdw.response([
+      {
+        id: "1",
+        title: "My First Post",
+      },
+      {
+        id: "2",
+        title: "A Mixtape I Made Just For You",
+      },
+    ])
+  );
 ```
