@@ -12,7 +12,7 @@ mdw.use(async (ctx, next) => {
   console.log("middleware completed for", ctx.request.url);
 });
 
-mdw.use(middleware.routes());
+mdw.use(mdw.routes());
 ```
 
 ```tsx
