@@ -1,7 +1,7 @@
 {
   "name": "remix-middleware",
   "version": "0.0.0",
-  "description": "middleware for your remix loaders",
+  "description": "middleware for your remix loaders and actions",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "repository": "https://github.com/neurosnap/remix-middleware.git",
