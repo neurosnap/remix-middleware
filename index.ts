@@ -63,7 +63,7 @@ export function createMiddleware() {
       const ctx: Ctx = { ...props, response: {} };
       const fn = compose(middleware);
       await fn(ctx);
-      return props.context.response;
+      return ctx.response;
     };
   }
 
