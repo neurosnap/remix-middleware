@@ -2,6 +2,10 @@
 
 Add an express-like middleware stack to your remix loaders and actions!
 
+```bash
+yarn add remix-middleware
+```
+
 ```ts
 // ./app/middleware.ts
 export const mdw = createMiddleware();
@@ -80,10 +84,12 @@ above?
 export const loader = mdw.loader(
   mdw.response([
     {
-      title: 'My First Post',
+      id: "1",
+      title: "My First Post",
     },
     {
-      title: 'A Mixtape I Made Just For You',
+      id: "2",
+      title: "A Mixtape I Made Just For You",
     },
   ]),
 );
