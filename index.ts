@@ -7,10 +7,7 @@ import type {
 
 type Next = () => any;
 interface Ctx extends DataFunctionArgs {
-  context: {
-    response: Promise<Response> | Response | Promise<AppData> | AppData;
-    [key: string]: any;
-  };
+  response: Promise<Response> | Response | Promise<AppData> | AppData;
 }
 type Middleware = (ctx: Ctx, next: Next) => any;
 type MiddlewareCo = Middleware | Middleware[];
@@ -47,23 +44,25 @@ const defaultMiddleware = async (_: Ctx, next: Next) => {
   await next();
 };
 
+const compileName = (request: Request): string =>
+  `${request.url} [${request.method}]`;
+
 export function createMiddleware() {
   const middleware: Middleware[] = [];
   const middlewareMap: { [key: string]: Middleware[] } = {};
 
   function route(md: MiddlewareCo) {
     return async function middlewareFn(props: DataFunctionArgs) {
+      const name = compileName(props.request);
       if (Array.isArray(md)) {
-        middlewareMap[props.request.url] = md;
+        middlewareMap[name] = md;
       } else {
-        middlewareMap[props.request.url] = [md];
+        middlewareMap[name] = [md];
       }
 
-      props.context = {
-        response: {},
-      };
+      const ctx: Ctx = { ...props, response: {} };
       const fn = compose(middleware);
-      await fn(props);
+      await fn(ctx);
       return props.context.response;
     };
   }
@@ -72,8 +71,13 @@ export function createMiddleware() {
     use: (md: Middleware) => {
       middleware.push(md);
     },
+    response: (resp: Ctx['response']) => async (ctx: Ctx, next: Next) => {
+      ctx.response = resp;
+      await next();
+    },
     routes: () => async (ctx: Ctx, next: Next) => {
-      const match = middlewareMap[ctx.request.url];
+      const name = compileName(ctx.request);
+      const match = middlewareMap[name];
       if (!match) {
         await next();
         return;

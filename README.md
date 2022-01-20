@@ -1,38 +1,42 @@
 # remix-middleware
 
-Add an express-like middleware stack to your remix loaders!
+Add an express-like middleware stack to your remix loaders and actions!
 
 ```ts
 // ./app/middleware.ts
-export const middleware = createMiddleware();
+export const mdw = createMiddleware();
 
-middleware.use(async (ctx, next) => {
+mdw.use(async (ctx, next) => {
   console.log("middleware activated for", ctx.request.url);
   await next();
   console.log("middleware completed for", ctx.request.url);
 });
 
-middleware.use(middleware.routes());
+mdw.use(middleware.routes());
 ```
 
 ```tsx
 // ./app/routes/posts/index.tsx
 import { useLoaderData } from "remix";
 
-import { middleware } from "~/middleware";
+import { mdw } from "~/middleware";
 
-export const loader = middleware.loader((ctx) => {
-  // ctx.context.response is where the response object goes
-  ctx.context.response = [
+export const loader = mdw.loader((ctx) => {
+  // ctx.response is where the response object goes
+  ctx.response = [
     {
-      slug: "my-first-post",
       title: "My First Post",
     },
     {
-      slug: "90s-mixtape",
       title: "A Mixtape I Made Just For You",
     },
   ];
+});
+
+export const action = mdw.action(async ({ request }) => {
+  const body = await request.formData();
+  const post = await createPost(body);
+  ctx.response = redirect(`/posts/${post.id}`);
 });
 
 export default function Posts() {
@@ -40,8 +44,38 @@ export default function Posts() {
   return (
     <div>
       <h1>Posts</h1>
-      {posts.map((post) => <div key={post.slug}>{post.title}</div>)}
+      <div>
+        {posts.map((post) => <div key={post.slug}>{post.title}</div>)}
+      </div>
+      <div>
+        <form method="post" action="/posts">
+          <p>
+            <label>
+              Title: <input name="title" type="text" />
+            </label>
+          </p>
+          <p>
+            <button type="submit">Create</button>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }
+```
+
+Just have simple JSON that you are returning in a loader like in the example
+above?
+
+```tsx
+export const loader = mdw.loader(
+  mdw.response([
+    {
+      title: 'My First Post',
+    },
+    {
+      title: 'A Mixtape I Made Just For You',
+    },
+  ]),
+);
 ```
