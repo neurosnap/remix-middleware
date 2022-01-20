@@ -2,6 +2,7 @@ import type {
   DataFunctionArgs,
   AppData,
   LoaderFunction,
+  ActionFunction,
 } from '@remix-run/server-runtime';
 
 type Next = () => any;
@@ -50,6 +51,23 @@ export function createMiddleware() {
   const middleware: Middleware[] = [];
   const middlewareMap: { [key: string]: Middleware[] } = {};
 
+  function route(md: MiddlewareCo) {
+    return async function middlewareFn(props: DataFunctionArgs) {
+      if (Array.isArray(md)) {
+        middlewareMap[props.request.url] = md;
+      } else {
+        middlewareMap[props.request.url] = [md];
+      }
+
+      props.context = {
+        response: {},
+      };
+      const fn = compose(middleware);
+      await fn(props);
+      return props.context.response;
+    };
+  }
+
   return {
     use: (md: Middleware) => {
       middleware.push(md);
@@ -64,21 +82,7 @@ export function createMiddleware() {
       const md = compose(match);
       await md(ctx, next);
     },
-    loader: (md: MiddlewareCo = defaultMiddleware): LoaderFunction => {
-      return async (props: DataFunctionArgs) => {
-        if (Array.isArray(md)) {
-          middlewareMap[props.request.url] = md;
-        } else {
-          middlewareMap[props.request.url] = [md];
-        }
-
-        props.context = {
-          response: {},
-        };
-        const fn = compose(middleware);
-        await fn(props);
-        return props.context.response;
-      };
-    },
+    loader: (md: MiddlewareCo = defaultMiddleware): LoaderFunction => route(md),
+    action: (md: MiddlewareCo = defaultMiddleware): ActionFunction => route(md),
   };
 }
