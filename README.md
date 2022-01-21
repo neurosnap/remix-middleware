@@ -101,7 +101,7 @@ export const loader: LoaderFunction = (props) =>
 
 ## remix-auth
 
-We built a couple middleware that will help interacting with [remix-auth]()
+We built a couple middleware that will help interacting with [remix-auth](https://github.com/sergiodxa/remix-auth)
 more streamlined.
 
 - isAuthenticated - activates `authenticator.isAuthenticated`
