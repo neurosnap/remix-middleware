@@ -23,7 +23,7 @@ mdw.use(mdw.routes());
 // ./app/routes/posts/index.tsx
 import { ActionFunction, LoaderFunction, Form, useLoaderData } from "remix";
 
-import { mdw } from "~/middleware";
+import { mdw } from "~/middleware.server";
 
 interface Post {
   id: string;
@@ -128,7 +128,7 @@ export const authenticator = new Authenticator<User>(sessionStorage);
 Create middleware for your needs
 
 ```ts
-// ./app/middleware.ts
+// ./app/middleware.server.ts
 import { createMiddleware, AuthCtx, isAuthenticated } from 'remix-middleware';
 import { authenticator } from './authenticator';
 import type { User } from './user';
@@ -162,7 +162,7 @@ Now in your routes that require authentication
 
 ```ts
 // in a route that requires auth
-import { authed } from '~/middleware.ts';
+import { authed } from '~/middleware.server';
 
 export const loader: LoaderFunction = (props) =>
   authed.run(props, (ctx) => {
@@ -179,7 +179,7 @@ Now in your routes that do *not* require authentication
 
 ```ts
 // in a route that does *not* require auth
-import { authed, unauthed } from '~/middleware.ts';
+import { authed, unauthed } from '~/middleware.server';
 
 // `.run()` doesn't need any middleware, it'll run without it
 export const loader = (props) => unauthed.run(props);
