@@ -179,7 +179,7 @@ Now in your routes that do *not* require authentication
 
 ```ts
 // in a route that does *not* require auth
-import { authed, unauthed } from '~/middleware.server';
+import { unauthed } from '~/middleware.server';
 
 // `.run()` doesn't need any middleware, it'll run without it
 export const loader = (props) => unauthed.run(props);
