@@ -189,7 +189,7 @@ export const loader = (props) => unauthed.run(props);
 `userData` middleware
 
 ```ts
-import { userData } from 'remux-auth';
+import { userData } from 'remux-middleware';
 import { authed } from '~/middleware.ts';
 
 // if you just want user data in the loader response
