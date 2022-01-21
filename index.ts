@@ -101,15 +101,6 @@ export function createMiddleware<CurCtx extends Ctx = Ctx>() {
   };
 }
 
-export async function userData<CurCtx extends AuthCtx = AuthCtx>(
-  ctx: CurCtx,
-  next: Next,
-) {
-  if (!ctx.response) ctx.response = {};
-  ctx.response.user = ctx.user;
-  await next();
-}
-
 export function isAuthenticated<U>(
   auth: Authenticator<U>,
   options?: { successRedirect?: never; failureRedirect?: never },

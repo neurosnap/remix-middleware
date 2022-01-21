@@ -7,7 +7,7 @@ yarn add remix-middleware
 ```
 
 ```ts
-// ./app/middleware.ts
+// ./app/middleware.server.ts
 export const mdw = createMiddleware();
 
 mdw.use(async (ctx, next) => {
@@ -101,11 +101,10 @@ export const loader: LoaderFunction = (props) =>
 
 ## remix-auth
 
-We built a couple middleware that will help interacting with [remix-auth](https://github.com/sergiodxa/remix-auth)
+We built a middleware that will help interacting with [remix-auth](https://github.com/sergiodxa/remix-auth)
 more streamlined.
 
 - isAuthenticated - activates `authenticator.isAuthenticated`
-- userData - automatically assigns the user object to the remix response object
 
 Setting up `remix-auth`
 
@@ -184,16 +183,4 @@ import { authed, unauthed } from '~/middleware.ts';
 
 // `.run()` doesn't need any middleware, it'll run without it
 export const loader = (props) => unauthed.run(props);
-```
-
-`userData` middleware
-
-```ts
-import { userData } from 'remux-middleware';
-import { authed } from '~/middleware.ts';
-
-// if you just want user data in the loader response
-export const loader = (props) => authed.run(props, userData)
-// this will automatically add `user` to the response object
-// ctx.response.user = { ... }
 ```
