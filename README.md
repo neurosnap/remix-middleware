@@ -136,7 +136,7 @@ import type { User } from './user';
 
 // use this middleware for routes that do *not* require authentication
 // but you want the user to automatically redirect somewhere
-export const unauthed = createMiddleware();
+export const unauthed = createMiddleware<AuthCtx<null>>();
 unauthed.use(isAuthenticated(authenticator, { successRedirect: '/dashboard' }));
 unauthed.use(unauthed.routes());
 
