@@ -163,7 +163,7 @@ Now in your routes that require authentication
 
 ```ts
 // in a route that requires auth
-import { authed } from '~/middleware.ts
+import { authed } from '~/middleware.ts';
 
 export const loader: LoaderFunction = (props) =>
   authed.run(props, (ctx) => {
