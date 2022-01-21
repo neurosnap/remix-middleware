@@ -101,6 +101,14 @@ export const loader: LoaderFunction = (props) =>
 
 ## remix-auth
 
+We built a couple middleware that will help interacting with [remix-auth]()
+more streamlined.
+
+- isAuthenticated - activates `authenticator.isAuthenticated`
+- userData - automatically assigns the user object to the remix response object
+
+Setting up `remix-auth`
+
 ```tsx
 // ./app/user.ts
 export interface User {
@@ -117,6 +125,8 @@ import type { User } from './user';
 
 export const authenticator = new Authenticator<User>(sessionStorage);
 ```
+
+Create middleware for your needs
 
 ```ts
 // ./app/middleware.ts
@@ -149,6 +159,8 @@ mdw.use(async (ctx, next) => {
 });
 ```
 
+Now in your routes that require authentication
+
 ```ts
 // in a route that requires auth
 import { authed } from '~/middleware.ts
@@ -164,6 +176,8 @@ export const loader: LoaderFunction = (props) =>
   });
 ```
 
+Now in your routes that do *not* require authentication
+
 ```ts
 // in a route that does *not* require auth
 import { authed, unauthed } from '~/middleware.ts';
@@ -171,6 +185,8 @@ import { authed, unauthed } from '~/middleware.ts';
 // `.run()` doesn't need any middleware, it'll run without it
 export const loader = (props) => unauthed.run(props);
 ```
+
+`userData` middleware
 
 ```ts
 import { userData } from 'remux-auth';
