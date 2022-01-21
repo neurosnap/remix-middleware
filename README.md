@@ -98,3 +98,86 @@ export const loader: LoaderFunction = (props) =>
     ])
   );
 ```
+
+## remix-auth
+
+```tsx
+// ./app/user.ts
+export interface User {
+  id: string;
+  email: string;
+}
+```
+
+```ts
+// ./app/authenticator.ts
+import { Authenticator } from 'remix-auth';
+import { sessionStorage } from "./session";
+import type { User } from './user';
+
+export const authenticator = new Authenticator<User>(sessionStorage);
+```
+
+```ts
+// ./app/middleware.ts
+import { createMiddleware, AuthCtx, isAuthenticated } from 'remix-middleware';
+import { authenticator } from './authenticator';
+import type { User } from './user';
+
+// use this middleware for routes that do *not* require authentication
+// but you want the user to automatically redirect somewhere
+export const unauthed = createMiddleware();
+unauthed.use(isAuthenticated(authenticator, { successRedirect: '/dashboard' }));
+unauthed.use(unauthed.routes());
+
+// use this middleware for routes that *require* authentication
+export const authed = createMiddleware<AuthCtx<User>>();
+authed.use(isAuthenticated(authenticator, { failureRedirect: '/login' }));
+authed.use(authed.routes());
+
+// use this middleware if the route allows both authenticated and
+// non-authenticated users
+export const mdw = createMiddleware<AuthCtx<User | null>>();
+mdw.use(isAuthenticated(authenticator));
+mdw.use(async (ctx, next) => {
+  if (ctx.user) {
+    // ... do something with the user
+  } else {
+    // ... do something with a non-user
+  }
+  await next();
+});
+```
+
+```ts
+// in a route that requires auth
+import { authed } from '~/middleware.ts
+
+export const loader: LoaderFunction = (props) =>
+  authed.run(props, (ctx) => {
+    // no user can make it to this point without being authenticated
+    // and as a result we now have access to ctx.user which is `User`
+    // in this example
+    console.log(ctx.user); // { id: '123', email: 'cool@lib.bro' }
+
+    ctx.response = { text: `Hi ${ctx.user.email}!` };
+  });
+```
+
+```ts
+// in a route that does *not* require auth
+import { authed, unauthed } from '~/middleware.ts';
+
+// `.run()` doesn't need any middleware, it'll run without it
+export const loader = (props) => unauthed.run(props);
+```
+
+```ts
+import { userData } from 'remux-auth';
+import { authed } from '~/middleware.ts';
+
+// if you just want user data in the loader response
+export const loader = (props) => authed.run(props, userData)
+// this will automatically add `user` to the response object
+// ctx.response.user = { ... }
+```

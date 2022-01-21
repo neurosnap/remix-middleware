@@ -1,18 +1,22 @@
-import type {
-  DataFunctionArgs,
-  AppData,
-  LoaderFunction,
-  ActionFunction,
-} from '@remix-run/server-runtime';
+import type { DataFunctionArgs, AppData } from '@remix-run/server-runtime';
+import type { Authenticator } from 'remix-auth';
 
 type Next = () => any;
-interface Ctx extends DataFunctionArgs {
+export interface Ctx extends DataFunctionArgs {
   response: Promise<Response> | Response | Promise<AppData> | AppData;
 }
-type Middleware = (ctx: Ctx, next: Next) => any;
-type MiddlewareCo = Middleware | Middleware[];
+export interface AuthCtx<U = any> extends Ctx {
+  user: U;
+}
 
-export function compose(middleware: Middleware[]) {
+type Middleware<CurCtx extends Ctx = Ctx> = (ctx: CurCtx, next: Next) => any;
+type MiddlewareCo<CurCtx extends Ctx = Ctx> =
+  | Middleware<CurCtx>
+  | Middleware<CurCtx>[];
+
+export function compose<CurCtx extends Ctx = Ctx>(
+  middleware: Middleware<CurCtx>[],
+) {
   if (!Array.isArray(middleware)) {
     throw new TypeError('Middleware stack must be an array!');
   }
@@ -22,7 +26,7 @@ export function compose(middleware: Middleware[]) {
     }
   }
 
-  return async function composer(context: Ctx, next?: Next) {
+  return async function composer(context: CurCtx, next?: Next) {
     // last called middleware #
     let index = -1;
     await dispatch(0);
@@ -40,18 +44,24 @@ export function compose(middleware: Middleware[]) {
   };
 }
 
-const defaultMiddleware = async (_: Ctx, next: Next) => {
+async function defaultMiddleware<CurCtx extends Ctx = Ctx>(
+  _: CurCtx,
+  next: Next,
+) {
   await next();
-};
+}
 
 const compileName = (request: Request): string =>
   `${request.url} [${request.method}]`;
 
-export function createMiddleware() {
-  const middleware: Middleware[] = [];
-  const middlewareMap: { [key: string]: Middleware[] } = {};
+export function createMiddleware<CurCtx extends Ctx = Ctx>() {
+  const middleware: Middleware<CurCtx>[] = [];
+  const middlewareMap: { [key: string]: Middleware<CurCtx>[] } = {};
 
-  async function middlewareFn(props: DataFunctionArgs, md: MiddlewareCo) {
+  async function middlewareFn(
+    props: DataFunctionArgs,
+    md: MiddlewareCo<CurCtx>,
+  ) {
     const name = compileName(props.request);
     if (Array.isArray(md)) {
       middlewareMap[name] = md;
@@ -61,19 +71,19 @@ export function createMiddleware() {
 
     const ctx: Ctx = { ...props, response: {} };
     const fn = compose(middleware);
-    await fn(ctx);
+    await fn(ctx as any);
     return ctx.response;
   }
 
   return {
-    use: (md: Middleware) => {
+    use: (md: Middleware<CurCtx>) => {
       middleware.push(md);
     },
-    response: (resp: Ctx['response']) => async (ctx: Ctx, next: Next) => {
+    response: (resp: CurCtx['response']) => async (ctx: CurCtx, next: Next) => {
       ctx.response = resp;
       await next();
     },
-    routes: () => async (ctx: Ctx, next: Next) => {
+    routes: () => async (ctx: CurCtx, next: Next) => {
       const name = compileName(ctx.request);
       const match = middlewareMap[name];
       if (!match) {
@@ -86,7 +96,43 @@ export function createMiddleware() {
     },
     run: (
       props: DataFunctionArgs,
-      md: MiddlewareCo = defaultMiddleware,
+      md: MiddlewareCo<CurCtx> = defaultMiddleware,
     ): Promise<Response> | Promise<AppData> => middlewareFn(props, md),
   };
+}
+
+export async function userData<CurCtx extends AuthCtx = AuthCtx>(
+  ctx: CurCtx,
+  next: Next,
+) {
+  if (!ctx.response) ctx.response = {};
+  ctx.response.user = ctx.user;
+  await next();
+}
+
+export function isAuthenticated<U>(
+  auth: Authenticator<U>,
+  options?: { successRedirect?: never; failureRedirect?: never },
+): Middleware<AuthCtx<U | null>>;
+export function isAuthenticated<U>(
+  auth: Authenticator<U>,
+  options: { successRedirect: string; failureRedirect?: never },
+): Middleware<AuthCtx<null>>;
+export function isAuthenticated<U>(
+  auth: Authenticator<U>,
+  options: { successRedirect?: never; failureRedirect: string },
+): Middleware<AuthCtx<U>>;
+export function isAuthenticated<U = any>(
+  auth: Authenticator<U>,
+  props:
+    | { successRedirect?: never; failureRedirect?: never }
+    | { successRedirect: string; failureRedirect?: never }
+    | { successRedirect?: never; failureRedirect: string } = {},
+): Middleware<AuthCtx<U | null>> {
+  async function isAuthMdw(ctx: AuthCtx, next: Next) {
+    const user = await auth.isAuthenticated(ctx.request, props as any);
+    ctx.user = user;
+    await next();
+  }
+  return isAuthMdw;
 }
